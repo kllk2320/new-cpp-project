@@ -22,6 +22,8 @@ do
 
 	--directory=* | -directory=*)
 		PRJ_ROOT=`expr "x$option" : "x-*directory=\(.*\)"`
+		#Manually expand the tilde sign
+		PRJ_ROOT=${PRJ_ROOT/\~/$HOME}
 		;;
 
 	-*)
@@ -66,19 +68,25 @@ if test "x$PRJ_NAME" = x; then
 		let count=count+1
 	done  
 	PRJ_NAME="new_prj$count"
+else 
+	if [ -e "$PRJ_ROOT/$PRJ_NAME" ]; then
+		echo "Error: cannot create project '$PRJ_NAME': project exists" 	
+		exit 1;
+	fi
 fi
 
-PRJ_TOPDIR="$PRJ_ROOT/$PRJ_NAME"
+PRJ_TOPDIR=$PRJ_ROOT/$PRJ_NAME
 
 #echo $PRJ_TOPDIR
 #echo $PRJ_NAME
+#exit 0
 
 #create project directories 
-mkdir -p $PRJ_TOPDIR
+mkdir $PRJ_TOPDIR
 for subdir in $PRJ_SUBDIRS
 do
 #	echo $PRJ_TOPDIR/$subdir
-	mkdir -p $PRJ_TOPDIR/$subdir
+	mkdir $PRJ_TOPDIR/$subdir
 done
 
 
@@ -129,7 +137,9 @@ EOF
 git init $PRJ_TOPDIR >> /dev/null
 cd $PRJ_TOPDIR
 git add -A >> /dev/null
-git commit -m "$PRJ_NAME created" >> /dev/null
-cd -
+git commit -m "Project '$PRJ_NAME' created" >> /dev/null
+cd - >> /dev/null
+
+echo "Project '$PRJ_NAME' created successsfully"
 
 exit 0
