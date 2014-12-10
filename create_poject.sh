@@ -47,9 +47,12 @@ Defaults for the options are specified in brackets.
 
 Configuration:
   -h, --help             display this help and exit
-  --name=NAME	         use existing Boost.Jam executable (bjam)
 
-  --directory=DIR        
+  --name=NAME            specify a project name
+                         [new_proj#]
+ 
+  --directory=DIR        directory where to store the project 
+                         [current directory]
  
 EOF
 
