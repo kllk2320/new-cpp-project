@@ -1,0 +1,139 @@
+#!/bin/bash
+
+#
+# A shell script for creating a new c/c++ project 
+#
+
+PRJ_NAME=''
+PRJ_ROOT=''
+PRJ_TOPDIR=
+PRJ_SUBDIRS="bin doc include lib src test" 
+
+
+usage() {
+
+  cat <<EOF
+$(basename $0) creates a new C/C++ project.
+
+Usage: $0 [ -n NAME ] [ -d DIR ]
+
+Options:
+  -h, --help    Show this help and exit
+
+  -n NAME       NAME of the project; default is new_proj#
+ 
+  -d DIR        Place the new project under DIR; default is current directory
+
+EOF
+
+}
+
+
+while getopts "n:d:" opt; do
+	case $opt in 
+		n)
+			PRJ_NAME=$OPTARG
+			;;
+		d)
+			PRJ_ROOT=$OPTARG
+			;;
+		-h)
+			usage
+			;;
+		\?)
+			usage
+			;;
+	esac
+done
+
+
+if [ "x$PRJ_ROOT" = x ]; then
+	PRJ_ROOT=$PWD
+fi
+
+#Determine the project name 
+if [ "x$PRJ_NAME" = x ]; then
+	count=0
+	while [ -e "$PRJ_ROOT/new_prj$count" ]; do 
+		let count=count+1
+	done  
+	PRJ_NAME="new_prj$count"
+else 
+	if [ -e "$PRJ_ROOT/$PRJ_NAME" ]; then
+		echo "Error: cannot create project '$PRJ_NAME': project exists" 	
+		exit 1;
+	fi
+fi
+
+PRJ_TOPDIR=$PRJ_ROOT/$PRJ_NAME
+
+#echo $PRJ_TOPDIR
+echo $PRJ_NAME
+#exit 0
+
+#create project directories 
+mkdir $PRJ_TOPDIR
+for subdir in $PRJ_SUBDIRS
+do
+#	echo $PRJ_TOPDIR/$subdir
+	mkdir $PRJ_TOPDIR/$subdir
+done
+
+
+#add the .gitignore file
+cat > $PRJ_TOPDIR/.gitignore <<EOF
+# Ignore the build and lib dirs
+build
+lib/*
+
+# Ingore any executables
+bin/*
+EOF
+
+#Ok, now we need a Makefile 
+
+cat > $PRJ_TOPDIR/Makefile <<EOF
+CROSS_COMPILE :=
+CC := gcc  #This is the main compiler
+RM := rm
+STRIP := strip
+
+SRC_DIR := src
+BUILD_DIR := build
+TARGET := bin/${PRJ_NAME}
+
+SRC_EXT := c
+SRCS := \$(shell find \$(SRC_DIR) -type f -name *.\$(SRC_EXT))
+OBJS := \$(patsubst \$(SRC_DIR)/%, \$(BUILD_DIR)/%, \$(SRCS:.\$(SRC_EXT)=.o))
+CFLAGS := -g # -Wall
+LIB := 
+INC := -Iinclude 
+
+all: \$(TARGET)
+\$(TARGET): \$(OBJS)
+	@echo " Linking ..."
+	@echo " \$(CC) \$^ -o \$(TARGET) \$(LIB)"; \$(CC) \$^ -o \$(TARGET) \$(LIB)
+
+\$(OBJS): \$(BUILD_DIR)/%.o: \$(SRC_DIR)/%.\$(SRC_EXT)
+	@mkdir -p \$(BUILD_DIR)
+	@echo " Compiling ..."
+	@echo " \$(CC) \$(CFLAGS) \$(INC) -c -o \$@ \$<"; \$(CC) \$(CF	) \$(IN	) -c -o \$@ \$< 
+
+clean:
+	@echo " Cleaning ..."
+	@echo " \$(RM) -rf \$(BUILD_DIR) \$(TARGET)"; \$(RM) -rf \$(BUILD_DIR) \$(TARGET)
+
+test:
+
+.PHONY: clean
+EOF
+
+#Use git for code control 
+git init $PRJ_TOPDIR >> /dev/null
+cd $PRJ_TOPDIR
+git add -A >> /dev/null
+git commit -m "Project '$PRJ_NAME' created" >> /dev/null
+cd - >> /dev/null
+
+echo "Project '$PRJ_NAME' created successsfully"
+
