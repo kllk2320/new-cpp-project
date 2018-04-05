@@ -112,12 +112,12 @@ INC := -Iinclude
 all: \$(TARGET)
 \$(TARGET): \$(OBJS)
 	@echo " Linking ..."
-	@echo " \$(CC) \$^ -o \$(TARGET) \$(LIB)"; \$(CC) \$^ -o \$(TARGET) \$(LIB)
+	@echo " \$(CROSS_COMPILE)\$(CC) \$^ -o \$(TARGET) \$(LIB)"; \$(CROSS_COMPILE)\$(CC) \$^ -o \$(TARGET) \$(LIB)
 
 \$(OBJS): \$(BUILD_DIR)/%.o: \$(SRC_DIR)/%.\$(SRC_EXT)
 	@mkdir -p \$(BUILD_DIR)
 	@echo " Compiling ..."
-	@echo " \$(CC) \$(CFLAGS) \$(INC) -c -o \$@ \$<"; \$(CC) \$(CF	) \$(IN	) -c -o \$@ \$< 
+	@echo " \$(CROSS_COMPILE)\$(CC) \$(CFLAGS) \$(INC) -c -o \$@ \$<"; \$(CROSS_COMPILE)\$(CC) \$(CFLAGS) \$(INC) -c -o \$@ \$< 
 
 clean:
 	@echo " Cleaning ..."
